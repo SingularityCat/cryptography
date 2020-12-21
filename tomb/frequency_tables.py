@@ -3,7 +3,7 @@ from collections import Counter
 from importlib import resources
 
 from . import data
-from .utils import freq, ngram_counter
+from .utils import freq, word_freq, count_ngrams, normalize_counter
 
 
 english_char = Counter()
@@ -20,8 +20,15 @@ for f in resources.contents(data):
             freq(text, english_char)
 
             text = text.lower()
-            freq((word.strip("!\"£$%^&*()-_=+{}[]:;@'~#<>,./?\\|") for word in text.split()), english_word)
+            word_freq(text, english_word)
 
             # bigram / trigram
-            ngram_counter(text, 2, english_bigram)
-            ngram_counter(text, 3, english_trigram)
+            count_ngrams(text, 2, english_bigram)
+            count_ngrams(text, 3, english_trigram)
+
+
+english_char_normalized = normalize_counter(english_char)
+english_word_normalized = normalize_counter(english_word)
+english_bigram_normalized = normalize_counter(english_bigram)
+english_trigram_normalized = normalize_counter(english_trigram)
+
