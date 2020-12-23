@@ -1,14 +1,15 @@
 import lzma
 from importlib import resources
 
-from .. import cache, data
+from .. import cache
+from . import data
 from . import LanguageModel, LanguageModelData, analyse_language
 
-def generate_language_model() -> LanguageModel:
+def generate_language_model(lang: str) -> LanguageModel:
     mdat = LanguageModelData.new()
 
     for f in resources.contents(data):
-        if f.endswith(".lzma"):
+        if f.endswith(f".{lang}.lzma"):
             with resources.open_binary(data, f) as src_b, lzma.open(src_b, "rt") as src_z:
                 text = src_z.read().strip()
                 analyse_language(text, mdat)
@@ -16,9 +17,13 @@ def generate_language_model() -> LanguageModel:
     return mdat.normalize()
 
 
-try:
-    english = cache.unpickle("language-model-english")
-except cache.CacheError:
-    english = generate_language_model()
-    cache.pickle("language-model-english", english)
+def load_language_model(lang: str) -> LanguageModel:
+    try:
+        lm = cache.unpickle(f"language-model-{lang}")
+    except cache.CacheError:
+        lm = generate_language_model(lang)
+        cache.pickle(f"language-model-{lang}", lm)
+    return lm
 
+
+english = load_language_model("english")
