@@ -62,6 +62,6 @@ def freq(s: Iterable[Any], tab: Optional[Counter[Any]] = None) -> Counter[Any]:
     return tab
 
 
-def normalize_counter(tab: Counter[Any]) -> dict[Any, float]:
+def normalize(tab: Counter[Any]) -> dict[Any, float]:
     total = sum(tab.values())
     return {key: count / total for key, count in tab.most_common()}

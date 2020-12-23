@@ -3,7 +3,7 @@ from collections import Counter
 from importlib import resources
 
 from . import data
-from .utils import freq, word_freq, count_ngrams, normalize_counter
+from .utils import freq, word_freq, count_ngrams, normalize
 
 
 english_char = Counter()
@@ -27,8 +27,8 @@ for f in resources.contents(data):
             count_ngrams(text, 3, english_trigram)
 
 
-english_char_normalized = normalize_counter(english_char)
-english_word_normalized = normalize_counter(english_word)
-english_bigram_normalized = normalize_counter(english_bigram)
-english_trigram_normalized = normalize_counter(english_trigram)
+english_char_normalized = normalize(english_char)
+english_word_normalized = normalize(english_word)
+english_bigram_normalized = normalize(english_bigram)
+english_trigram_normalized = normalize(english_trigram)
 
