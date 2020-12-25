@@ -2,27 +2,8 @@ import math
 import statistics
 from typing import Any
 
+from .functions import bhattacharyya_coefficient
 from .language import analyse_language, tables
-
-
-# The original approach taken here was to do a rank-scaled sum of differences between
-#  the measured and reference distributions, and then average these scores.
-
-
-def bhattacharyya_coefficient(p: dict[Any, float], q: dict[Any, float]) -> float:
-    """
-    Returns the Bhattacharyya coefficient for any two discrete probability distributions.
-
-                  n  ____
-        BC(p,q) = ∑ √pᵢqᵢ
-                 i=1
-
-    This is the sum, across all probabilities of the square root product of the same probability in p and q.
-
-    Assuming probabilities in p and q correctly add up to 1.0 each, the output of this function is between
-     0 and 1, with 0 meaning no overlap and 1 meaning total overlap.
-    """
-    return sum(math.sqrt(p.get(key, 0.0) * q.get(key, 0.0)) for key in p.keys() | q.keys())
 
 
 def englishness(pt: str) -> float:
