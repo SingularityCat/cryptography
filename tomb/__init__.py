@@ -18,43 +18,6 @@ def simplify(s):
     return s.lower()
 
 
-def freq(m, fmap=None):
-    """Calculate the item occurance frequencies of some sequence."""
-    if fmap is None:
-        fmap = {}
-    for c in m:
-        if c in fmap:
-            fmap[c] += 1
-        else:
-            fmap[c] = 1
-    return fmap
-
-
-def loadfreq(f, simple=True, word=False, fmap=None):
-    """Load frequency data from a file."""
-    if fmap is None:
-        fmap = {}
-    with open(f, "r") as src:
-        for line in src:
-            if simple:
-                line = simplify(line)
-            if word:
-                freq(line.split(), fmap)
-            else:
-                freq(line, fmap)
-    return fmap
-
-
-def freqmap(a, b):
-    """Create a translation table from frequency information."""
-    s_a = sorted(a.items(), key=operator.itemgetter(1), reverse=True)
-    s_b = sorted(b.items(), key=operator.itemgetter(1), reverse=True)
-    mab = {}
-    for a, b in zip(s_a, s_b):
-        mab[ord(a[0])] = ord(b[0])
-    return mab
-
-
 def revmap(d: dict) -> dict:
     """Create a reversed mapping."""
     r = {}
