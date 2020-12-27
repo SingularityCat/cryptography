@@ -1,57 +1,27 @@
-#!/usr/bin/env python3
-import operator
-import functools
+from collections.abc import Iterable, Iterator, Sequence
+from typing import Any
 
-import pprint
-import string
-from binascii import hexlify, unhexlify
 
-def simplify(s):
+def xorc(d: bytes, k: int) -> bytes:
     """
-    'Simplify' a string.
-    Replaces all whitespace with spaces.
-    Removes all non-ascii-alphanumeric chars (that aren't spaces).
+    XOR each byte with a single byte.
     """
-    trtbl = dict((ws, " ") for ws in string.whitespace)
-    s = s.translate(trtbl)
-    s = "".join(c for c in s if c in string.ascii_letters + string.digits + " ")
-    return s.lower()
+    return bytes(b ^ k for b in d)
 
 
-def revmap(d: dict) -> dict:
-    """Create a reversed mapping."""
-    r = {}
-    for k, v in d.items():
-        r[v] = k
-    return r
-
-
-def rot(s: str, n: int, mod=256) -> str:
-    """
-    'rotate' every character in a string n times.
-    (think rot13 or caesar)
-    """
-    def rotnum(k):
-        return (mod + k + n) % mod
-    return "".join(chr(rotnum(ord(c))) for c in s)
-
-
-def infrep(seq):
+def infrep(seq: Iterable[Any]) -> Iterator[Any]:
     """Create an infinitely repeating sequence from a finite one."""
     while True:
-        itr = iter(seq)
         for i in seq:
             yield i
 
 
-def strxor(a: str, b: str) -> str:
+def xor(msg: bytes, key: bytes) -> bytes:
     """
-    Compute the 'xor' of two strings.
-    If the strings are of different lengths, the smaller one is repeated.
+    Compute the 'xor' of two byte strings, a message and a key.
+    If the key is smaller than the message, it is repeated.
     """
-    m = max(a, b)
-    k = infrep(min(a, b))
-    return "".join(chr(ord(x) ^ ord(y)) for (x, y) in zip(m, k))
+    return bytes(x ^ y for x, y in zip(msg, infrep(key)))
 
 
 def fission(fissile, *funcs):
@@ -68,7 +38,7 @@ def fission(fissile, *funcs):
         return fissile
 
 
-def chop(s, k):
+def chop(s: Sequence[Any], k: int) -> list[Sequence[Any]]:
     """Chop some finite sequence up into groups of k length."""
     return [s[i:i+k] for i in range(0, len(s) - k, k)]
 
@@ -82,9 +52,5 @@ def nsplit(src: str, *delims: str):
     return fission(src, *funcs)
 
 
-def extract(src, *keys):
-    for k in keys:
-        src = src[k]
-    return src
-
-p = pprint.PrettyPrinter(width=10, indent=4).pprint
+import pprint
+pprint = pprint.PrettyPrinter(width=10, indent=4).pprint
