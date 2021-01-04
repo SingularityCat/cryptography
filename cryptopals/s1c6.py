@@ -5,9 +5,8 @@
 from binascii import a2b_base64
 from collections.abc import Iterator
 
-from tomb import infrep, xorc, xor
-from tomb.functions import hamming_distance
-from tomb.analysis import englishness
+from tomb import transplit, xorc, xor
+from tomb.analysis import englishness, guess_vignere_key_length
 
 ct = a2b_base64("""\
 HUIfTQsPAh9PE048GmllH0kcDk4TAQsHThsBFkU2AB4BSWQgVB0dQzNTTmVS
@@ -77,44 +76,6 @@ Jk8DCkkcC3hFMQIEC0EbAVIqCFZBO1IdBgZUVA4QTgUWSR4QJwwRTWM=
 """)
 
 
-def guess_vignere_key_length(ct: bytes, start: int = 1, end: int = -1, samples: int = -1) -> Iterator[int]:
-    mid = len(ct) // 2
-    if end < 1 or end > mid:
-        end = mid
-    if samples < 1:
-        samples = len(ct)
-
-    guesses = {}
-
-    for l in range(start, end + 1):
-        num = 0
-        dist = 0
-
-        for i in range(0, min(samples, len(ct) // l) - 1):
-            a = ct[(i + 0) * l : (i + 1) * l]
-            b = ct[(i + 1) * l : (i + 2) * l]
-            if len(a) != len(b):
-                continue
-            dist += hamming_distance(a, b) / l
-            num += 1
-
-        avg_norm_dist = dist / num
-
-        guesses[l] = avg_norm_dist
-
-    for l, _ in sorted(guesses.items(), key=lambda k: k[1]):
-        yield l
-
-
-def transplit(data: bytes, blksz: int):
-    segments = [bytearray() for i in range(0, blksz)]
-
-    for byte, segidx in zip(data, infrep(range(0, blksz))):
-        segments[segidx].append(byte)
-
-    return segments
-
-
 def crack_single_byte_xor(ct):
     scores = {}
     for k in range(0, 256):
@@ -132,7 +93,7 @@ def crack_single_byte_xor(ct):
 
 score_threshold = 0.1
 
-for l in guess_vignere_key_length(ct, 2, 40):
+for l in guess_vignere_key_length(ct):
     transposed_blocks = transplit(ct, l)
     key = bytearray(l)
     for idx in range(0, l):

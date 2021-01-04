@@ -24,6 +24,29 @@ def xor(msg: bytes, key: bytes) -> bytes:
     return bytes(x ^ y for x, y in zip(msg, infrep(key)))
 
 
+def transplit(data: bytes, blksz: int) -> list[bytes]:
+    """
+    Transpose/split bytes into 'blksz' number of blocks.
+    Every nth byte is added to the nth block.
+
+    e.g:
+    >>> transplit(b"abcdeabcdeabcde", 5)
+     [b"aaa", b"bbb", b"ccc", b"ddd", b"eee"]
+
+    Or to put it another way, given 15 bytes of data, and a block size of 5,
+     this function will produce 5 blocks, each 3 bytes long.
+     The first block will consist of the 1st, 6th and 11th byte, the second
+      block will consist of the 2nd, 7th and 12th byte, the third will consist
+      of the 3rd, 8th and 13th byte, and so on.
+    """
+    segments = [bytearray() for i in range(0, blksz)]
+
+    for byte, segidx in zip(data, infrep(range(0, blksz))):
+        segments[segidx].append(byte)
+
+    return segments
+
+
 def fission(fissile, *funcs):
     """
     Repeatedly apply an iterable of functions on the results of previous functions.
