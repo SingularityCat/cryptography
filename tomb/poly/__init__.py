@@ -196,6 +196,54 @@ class Polynomial(NamedTuple):
         return True
 
 
+########################
+# Conversion functions #
+########################
+
+
+def polynomial_to_expression(poly: Polynomial) -> str:
+    terms = []
+    for t in poly.terms:
+        if t.exponent == 0:
+            terms.append(str(t.coefficient))
+        else:
+            coeff = "" if t.coefficient == 1 else str(t.coefficient)
+
+            if t.exponent == 1:
+                terms.append(coeff + "x")
+            else:
+                terms.append(coeff + "x^" + str(t.exponent))
+    return " + ".join(terms)
+
+
+def polynomial_from_expression(expr: str) -> Polynomial:
+    terms = []
+    for t in expr.split("+"):
+        c, x, e = t.strip(" ").partition("x")
+        if x != "x":
+            c = int(c)
+            e = 0
+        else:
+            c = 1 if c == "" else int(c)
+            e = 1 if e == "" else int(e.lstrip("^"))
+        terms.append(Monomial(c, e))
+    return Polynomial(tuple(terms))
+
+
+def polynomial_from_binary(n: int) -> Polynomial:
+    """
+    Construct a polynomial from the bits in a number.
+    """
+    terms = []
+    expr = 0
+    while n > 0:
+        if n & 0x1 > 0:
+            terms.append(Monomial(1, expr))
+        expr += 1
+        n >>= 1
+    return Polynomial(tuple(reversed(terms)))
+
+
 def parse_polynomial_forgiving(expr: str) -> Polynomial:
     """
     An extremely forgiving polynomial expression parser.
