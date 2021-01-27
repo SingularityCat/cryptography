@@ -184,13 +184,13 @@ class Polynomial(NamedTuple):
         return Polynomial(quotient), dividend
 
     def __floordiv__(self, other: Polynomial) -> Polynomial:
-        return divmod(self)[0]
+        return divmod(self, other)[0]
 
     def __mod__(self, other: Polynomial) -> Polynomial:
-        return divmod(self)[1]
+        return divmod(self, other)[1]
 
     def __eq__(self, other: Polynomial) -> bool:
-        for a, b in zip(self.simplify().terms, other.simplify.terms()):
+        for a, b in zip(self.simplify().terms, other.simplify().terms):
             if a != b:
                 return False
         return True
