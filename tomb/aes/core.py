@@ -21,20 +21,22 @@ This array is actually a column-major 4x4 array.
 
 **key array**
 The key array is an array of 4, 6 or 8 unsigned 32-bit integers.
-This array is read-only.
+This array is never modified.
 
 This represents a 128, 192 or 256 bit AES key.
 
 
 **keysched array**
 The keysched array is an array of 44, 52 or 60 unsigned 32-bit integers.
-This array is read-only.
+This array is never modified.
 
 This represents the key schedule of an AES key.
 
 ---
 
-These functions generally trust the above is true.
+These functions generally trust the above is true, and do not make any attempts to validate this.
+
+In addition to array objects, memoryviews of array objects are also accepted.
 """
 
 from array import array
@@ -50,7 +52,7 @@ ZEROES = b"\x00\x00\x00\x00" * 60   # largest size of key schedule
 
 
 def key_expansion(key: array) -> array:
-    keysched = key[:]
+    keysched = array("I", key)
 
     # Length of the key, in 32-bit words.
     # should be 4, 6 or 8.
