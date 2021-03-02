@@ -18,6 +18,8 @@ This array is actually a column-major 4x4 array.
 
     state[i,j] = state[i + j*4]
 
+This object may be an array, memoryview or bytearray, or anything sufficiently similar.
+
 
 **key array**
 The key array is an array of 4, 6 or 8 unsigned 32-bit integers.
@@ -36,16 +38,17 @@ This represents the key schedule of an AES key.
 
 These functions generally trust the above is true, and do not make any attempts to validate this.
 
-In addition to array objects, memoryviews of array objects are also accepted.
+The state objects are expected to be arrays or memoryviews, but they are only ever accessed via integer indices,
+ so any mutable mapping will work, provided it has keys 0 through to 15.
 """
 
 from array import array
+from typing import Union
 
 from .constants import *
 
 
-def fmt_state(state: array) -> str:
-    return "\n".join(" ".join(f"{state[j + 4*i]:02x}" for i in range(0, 4)) for j in range(0, 4))
+block = Union[array, memoryview, bytearray]
 
 
 ZEROES = b"\x00\x00\x00\x00" * 60   # largest size of key schedule
@@ -99,7 +102,7 @@ def kex_rot_word(w: int) -> int:
 # That's it for key_expansion.
 
 
-def add_round_key(state: array, keysched: array, r: int):
+def add_round_key(state: block, keysched: array, r: int):
     for c in range(0, 4):
         ksw = keysched[r*4 + c]
         state[0 + c*4] ^= (ksw >> 24) & 0xFF
@@ -108,7 +111,7 @@ def add_round_key(state: array, keysched: array, r: int):
         state[3 + c*4] ^= (ksw >>  0) & 0xFF
 
 
-def sub_bytes(state: array):
+def sub_bytes(state: block):
     # Substitute values in the AES S-box.
     for i in range(0, 16):
         state[i] = S_BOX[state[i]]
@@ -122,7 +125,7 @@ def sub_bytes(state: array):
 # [ 3,  7, 11, 15]
 
 
-def shift_rows(state: array):
+def shift_rows(state: block):
     t1 = state[1]
     state[1] = state[5]
     state[5] = state[9]
@@ -143,7 +146,7 @@ def shift_rows(state: array):
     state[7] = t3
 
 
-def mix_columns(state: array):
+def mix_columns(state: block):
     # Treating each column of state as a 4-term polynomial,
     #  multiply by '3𝑥³ + 𝑥² + 𝑥 + 2' modulo '𝑥⁴ + 1'
     # Apparently, this is equivalent to this matrix multiplication in GF(2⁸):
@@ -165,12 +168,12 @@ def mix_columns(state: array):
         state[3 + c] = sc3
 
 
-def inv_sub_bytes(state: array):
+def inv_sub_bytes(state: block):
     for i in range(0, 16):
         state[i] = INV_S_BOX[state[i]]
 
 
-def inv_shift_rows(state: array):
+def inv_shift_rows(state: block):
     t1 = state[1]
     state[1] = state[13]
     state[13] = state[9]
@@ -191,7 +194,7 @@ def inv_shift_rows(state: array):
     state[15] = t3
 
 
-def inv_mix_columns(state: array):
+def inv_mix_columns(state: block):
     # Treating each column of state as a 4-term polynomial,
     #  multiply by '11𝑥³ + 13𝑥² + 9𝑥 + 14' modulo '𝑥⁴ + 1'
     # Apparently, this is equivalent to this matrix multiplication:
@@ -215,7 +218,7 @@ def inv_mix_columns(state: array):
 
 # The AES cipher/inverse cipher
 
-def cipher(state: array, keysched: array):
+def cipher(state: block, keysched: array):
     rounds = (len(keysched) >> 2) - 1
     add_round_key(state, keysched, 0)
 
@@ -230,7 +233,7 @@ def cipher(state: array, keysched: array):
     add_round_key(state, keysched, rounds)
 
 
-def inv_cipher(state: array, keysched: array):
+def inv_cipher(state: block, keysched: array):
     rounds = (len(keysched) >> 2) - 1
     add_round_key(state, keysched, rounds)
 
@@ -244,3 +247,28 @@ def inv_cipher(state: array, keysched: array):
     inv_shift_rows(state)
     inv_sub_bytes(state)
     add_round_key(state, keysched, 0)
+
+
+# Other useful operations on a state block:
+
+def xor_state(state: block, blk: block):
+    state[0] ^= blk[0]
+    state[1] ^= blk[1]
+    state[2] ^= blk[2]
+    state[3] ^= blk[3]
+    state[4] ^= blk[4]
+    state[5] ^= blk[5]
+    state[6] ^= blk[6]
+    state[7] ^= blk[7]
+    state[8] ^= blk[8]
+    state[9] ^= blk[9]
+    state[10] ^= blk[10]
+    state[11] ^= blk[11]
+    state[12] ^= blk[12]
+    state[13] ^= blk[13]
+    state[14] ^= blk[14]
+    state[15] ^= blk[15]
+
+
+def fmt_state(state: block) -> str:
+    return "\n".join(" ".join(f"{state[j + 4*i]:02x}" for i in range(0, 4)) for j in range(0, 4))
